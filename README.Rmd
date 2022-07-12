@@ -7,4 +7,4 @@ include in your README:
 - A description (1-2 sentences) about your dataset
 - Your name
 
-Ex: this is a project by Elom Azamati analyzing data about RAM prices based on (idk). It uses the RAM data set from [Kaggle](https://www.kaggle.com/datasets/raczeq/ethereum-effect-pc-parts?select=DIM_RAM_PROD.csv)
+Ex: This is a project by Elom Azamati analyzing data about CO2 emissions from cars in Canada. It uses the Carbon dioxide emissions dataset from [Kaggle](https://www.kaggle.com/datasets/debajyotipodder/co2-emission-by-vehicles?select=CO2+Emissions_Canada.csv)
