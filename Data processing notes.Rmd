@@ -1,0 +1,286 @@
+---
+title: "dplyr(tidyclean)"
+output:
+  word_document: default
+  html_document: default
+date: '2022-07-13'
+---
+Data processing: Going from dataset to end up with a dataset
+Data Analysis: Start with dataset and come up with some conclusion
+
+dplyr is an R package in the tidyverse. We can load the package using
+
+```{r}
+#load required libraries
+library(ggplot2)
+library(dplyr) #Data(frames) plier = dplyr
+?dplyr
+```
+dplyr gives a grammar of data manipulation whereas ggplot gives a grammar of graphics
+Why manipulate data? Well, with all the data that we get it's almost impossible to do proper data analysis; outliers skew data or missing values cause holes.
+
+```{r} 
+#preview dataset
+head(starwars)
+
+```
+## Filtering data
+What we first wanna do and our first dplyr function, `filter()` used to subset data based on data values themselves. This allows us to subset observations (rows) based on their values (in columns).
+
+Tips: 
+	* Be sure you spell the column name correctly (and the value name if it's a categorical variable). Remember, R is case-sensitive
+	* Be sure to use `==` when comparing observations. (Remember, `=` is an assignment operator)	
+	* You can use >, <, >=, <= to compare numeric or categorical variables (nominal variables are ranked alphabetically, while ordinal variables have a built-in rank. Ex: 1999 - 2008, 2008 is last. In this case they're numeric but they have a built in rank. Different datasets have different ranks)
+
+```{r} 
+filter(starwars, hair_color == "blond" | hair_color == "blonde") #hover over the function. It asks for dataset then other stuffs; next thing would be what we want to filter our dataframe right? so if want only certain type of characters (from starwars) can look at column from table, 'hair_color' from above and say that we want it to only be blond
+#when run, prints filtered dataset to console
+
+filter(starwars, hair_color %in% c("blond", "blonde")) #you can give %in% a vector and what it'll do is that it'll look inside that vector and see if that value for hair_color (or what you gave) matches anything inside the vector you just made filtering for specific things
+
+#now you don't have to use | for everything; 'someone from Naboo | Hoth | Tatooine' but rather: %in% c('Tatooine', 'Hoth', 'Naboo')
+
+importantPlanets <- c("Tatooine", "Naboo", "Mustafar")
+
+filter(starwars, homeworld %in% importantPlanets)
+filter(starwars, hair_color == "blond" & species == "Human", homeworld == "Tatooine", skin_color == "fair")
+#what filter() does is takes all your different filters and puts a comma between them so you don't have to use &
+#can test for numeric variables just the same as we're specifiying equalities for our filters we are looking for above
+
+filter(starwars, mass == 75)
+filter(starwars, mass <= 75) #less than 75
+filter(starwars, mass >= 75, mass <= 100) #for in between
+filter(starwars, mass >= 75, mass <= 100, hair_color == "brown") #can keep going and thin the data!
+filter(starwars, mass != 75)
+filter(starwars, mass != 75, name < "m") #case does not matter
+filter(starwars, mass != 75, name < "Mace")
+
+#ranked data
+head(diamonds) #the cut is ranked!
+class(diamonds$cut) #ordered, factor. Btw, 'class()' gives specific type of data
+?factor
+summary(diamonds$cut) #tells how many there are in each category and tells us the ranking from L to R. Btw, head of one row (like what we did here) displays first 6 values (and levels). Levels basically saying: Hey, these aren't random words. Btw, 'summary()' gives a count of each category (or quartiles if numeric)
+
+
+filter(diamonds, cut > "Good")
+
+
+##Ordering Categorical Data
+unique(starwars$eye_color) #gives all uniques (non-duplicates) in a datafram/array and returns a vector
+?unique()
+factor(starwars$eye_color, c("red", "orange", "gold", "yellow", "green,yellow", "blue", "black"), ordered = T) #factorize eyecolor and put in specific order
+#factor is a way to turn a category (which by default is nominal) into an ordered rank (ordinal).. hence our "ordered = T" to keep our categories as an order
+
+
+## Find all characters that are shorter than 100cm
+filter(starwars, height < 100, species != "Droid")
+
+## Which characters were born between the years 100 and 200 (inclusive)
+filter(starwars, birth_year >= 100, birth_year <= 200)
+# OR
+filter(starwars, between(birth_year, 100, 200))
+
+## Which characters weigh over 100kg but are shorter than 185cm
+filter(starwars, mass > 100, height < 185)
+
+
+## Missing values (aka: NA)
+#can have unexpected effects- like when doing summary stats or arithmetic
+NA > 5 #(It doesn't know) Can't say if false or not because if it were here, well then I mean it could or couldn't be
+
+is.na(NA) #Yes, NA is NA...
+
+mass <- NA
+mass == 10 #returns NA
+is.na(mass) #returns true; use this instead of inequalities really
+
+NA == NA #2 unknowns but the 2 unknowns could be 2 different values!
+mary_age <- NA
+paul_age <- NA
+mary_age == paul_age
+#filter filters out all NAs...but if you wanna keep it: explicitly have to say, 'is.na(mass)'
+filter(starwars, mass != 75 | is.na(mass), name < "Mace") #Can't use 'and' because well nothing will be a value and also NA....
+## Which characters are missing a hair color?
+
+filter(starwars, is.na(hair_color))
+
+
+```
+Ofc, you'd need to save the filter to a vector to **KEEP** the filtered data
+
+
+## Arranging data
+`arrange()` reorders rows. It does not remove any rows.
+
+```{r}
+arrange(starwars, birth_year)
+#now ranks from lowest to highest (NAs always at end)
+
+#highest to lowest 
+arrange(starwars, desc(birth_year)) #desc = descending
+
+# categorical is alphabetical
+arrange(starwars, hair_color) # A to Z
+
+# Multiple columns
+arrange(starwars, hair_color, birth_year) #increasing until next hair color comes up!
+arrange(starwars, birth_year, hair_color)
+
+## Arrange star wars characters to find the tallest characters and the shortest characters
+arrange(starwars, height)
+arrange(starwars, desc(height))
+
+## Alphabetize the star wars characters by name
+arrange(starwars, name)
+
+## How would you use arrange() to sort out all missing values to the start? 
+arrange(starwars, desc(is.na(height))) #would have to do for ALL columns
+
+
+
+```
+## Selecting Data
+We can select certain columns in the dataset
+`select()` allows us to retain only certain variables (columns). It doesn't change order but it removes columns not named.
+```{r}
+
+selection <- select(starwars, hair_color, skin_color, eye_color) #arrange sorted by columns, select only keeps those columns; doesn't change order
+?select
+select(starwars, hair_color:eye_color) #returns every column between first:last
+
+select(starwars, -hair_color)
+select(starwars, -(hair_color:eye_color)) #since using range, put in parentheses.. but if just one wouldn't need it
+
+select(starwars, -(hair_color:eye_color)) #removed all columns that do with color.. can be done an easier way... see line 154
+```
+```{r eval = F}
+ggplot(starwars_noColor, aes(x = hair_color)) #error because we removed it
+
+```
+```{r}
+select(starwars, contains("color"))
+select(starwars, ends_with("color"))
+select(starwars, contains("_"))
+select(starwars, starts_with("s"))
+select(starwars, starts_with("s"), ends_with("color")) #only needs to meet one of the parameters!
+?select #for more helping functions
+
+#### NOTE: WITH filter(), COMMA ANS AND BUT HERE IT'S OPPOSITE... JUST USE & AND | IF EVER CONFUSED
+
+#select can be used to rename variables (but drops all the ones you didn't call) so...
+rename(starwars, birthYear = birth_year)
+?rename
+x = 5 
+y = x #basically what rename does; deletes old variable.
+
+## Select out the homeowrld and species for the dataset. What question might this subest of varaibles help answer? 
+select(starwars, homeworld, species)
+
+## Brainstorm as many ways as possible to select hair_color, eye_color, skin_color, and birth_year
+select(starwars, contains("_"))
+```
+
+## Adding new columns
+`mutate()` adds new collumns to the end of your dataset.
+
+```{r}
+starwars_small <- select(starwars, height, mass, birth_year)
+head(starwars_small)
+
+
+starwars_small <- mutate(starwars_small, height_m = height/100) #can also do it like this: 'height = height/100' to overwrite...
+mutate(starwars_small, bmi = mass/(height_m^2))
+#mutate(starwars_small, 
+#       height_m = height/100, 
+#       bmi = mass/(height_m^2)) this is a possible way to format for easier viewing!
+
+
+#To only keep new columns, use transmute
+transmute(starwars_small, 
+            height_m = height/100, 
+            bmi = mass/(height_m^2)) #could select out all the new columns too but.. this is easier; btw: ** = ^2
+
+## Using aggregate functions 
+mutate(starwars_small, tot_mass = sum(mass)) #adding NA to anything else will make it equal to NA (our problem here) but there's a parameter to fix that!
+mutate(starwars_small, tot_mass = sum(mass, na.rm = T))
+
+prop_mass <- mutate(starwars_small, proportional_mass = mass/sum(mass, na.rm = T))
+arrange(prop_mass, desc(proportional_mass))
+```
+
+
+## Summarizing and grouping data
+(both `summarize()` and `summarise()` work)
+`summarize()` collapses an entire column of data to a single value
+
+``` {r}
+mutate(starwars, mean_mass = mean(mass, na.rm = T)) #same value for all rows! what if only wanted one row? 
+summarize(starwars,
+          mean_mass = mean(mass, na.rm = T), 
+          mean_height = mean(height, na.rm = T))
+
+mean(starwars$mass, na.rm = T) #can do this but tedious if want multiple like above
+
+
+species_masses <- summarize(group_by(starwars, species), 
+          mean_mass = mean(mass, na.rm = T)) #creates groups by species and then adds new column that is mean mass! Mean mass of each species! 
+#NaN= for all of the Chagrian species, no data was found (in our example and applies elsewhere)
+
+##reording to see which species weighs the most
+arrange(species_masses, desc(mean_mass))
+
+?n() #returns count of how many different values in these specific groups are!
+species_masses <- summarize(group_by(starwars, species), 
+          mean_mass = mean(mass, na.rm = T), 
+          count = n())
+# the pipe operator, %>%
+# function with parameters x and y is the same as the function x piped into y otherwise written: function(x, y) is the same as x %>% function(y)
+ #takes output and pipes it into the input of the next function!
+#when using dplyr functions, such as %>%, you are usually gonna always start with your dataset
+species_masses <- starwars %>%
+  group_by(species) %>% #all this is equal to group_by(starwars, species)
+  summarize(mean_mass = mean(mass, na.rm = T), 
+          count = n()) %>%
+  arrange(desc(mean_mass))
+species_masses #have to run to view it
+
+```
+
+## Sampling n number of rows
+`sample_n()` allows us to sample a random of rows from our data set.
+```{r}
+sample_n(starwars, 10) #random though... no like literally each time you run it, it's random. 
+starwars_10Rows <- sample_n(starwars, 10) #this saves the randomness so each time it brings the same values!
+starwars_10Rows
+
+starwars_10percent <- sample_frac(starwars, 0.1) #sample_frac() gives fraction/percent of rows; 10% of the rows were pulled this time while above was 10 full rows 
+starwars_10percent
+nrow(starwars) #total number of rows is 87, 10% is about 9(as seen from the computation done above)
+
+```
+
+
+As sampling (above) is random, we can also take a "slice" of our data set using `slice()` and accompanying functions which keeps everything (the order of our rows in the data set)in order; It is not random. 
+
+
+```{r}
+?slice()
+
+starwars %>%
+  group_by(gender) %>%
+  sample_n(4) #groups by gender and samples 4! Then puts it into data set with all the different columns; grouping a data set by a specific variable. 
+names(starwars)
+?names()
+
+starwars %>% 
+  group_by(species) %>%
+  sample_n(1) #finds one character from each species!
+
+slice(starwars, 50:60) #slice by index value (row number)
+
+slice_head(starwars, n = 10) #first 10 rows by index; if arranged in a certain way then sliced then it would be first 10 from the top (that were arranged)
+slice_tail(starwars, n = 10) #last 10 rows by index
+slice_min(starwars, order_by = mass, n = 10) #have to give column you want to order by first! Gives rows with lowest 10 masses. Look up why need n =10
+slice_max(starwars, order_by = mass, n = 10)  #rows with highest 10 masses
+
+``` 
