@@ -280,7 +280,7 @@ slice(starwars, 50:60) #slice by index value (row number)
 
 slice_head(starwars, n = 10) #first 10 rows by index; if arranged in a certain way then sliced then it would be first 10 from the top (that were arranged)
 slice_tail(starwars, n = 10) #last 10 rows by index
-slice_min(starwars, order_by = mass, n = 10) #have to give column you want to order by first! Gives rows with lowest 10 masses. Look up why need n =10
+slice_min(starwars, order_by = mass, n = 10) #have to give column you want to order by first! Gives rows with lowest 10 masses.
 slice_max(starwars, order_by = mass, n = 10)  #rows with highest 10 masses
 
 ``` 
