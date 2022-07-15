@@ -42,6 +42,10 @@ filter(starwars, hair_color %in% c("blond", "blonde")) #you can give %in% a vect
 
 importantPlanets <- c("Tatooine", "Naboo", "Mustafar")
 
+new_hope_chars <- filter(starwars, "A New Hope" %in% films)
+View(new_hope_chars) # Can see those in A New Hope + Others!
+
+
 filter(starwars, homeworld %in% importantPlanets)
 filter(starwars, hair_color == "blond" & species == "Human", homeworld == "Tatooine", skin_color == "fair")
 #what filter() does is takes all your different filters and puts a comma between them so you don't have to use &
